@@ -54,7 +54,8 @@ int read_input( FILE *input_fp, char *p_title, char *p_master_input,
                 double *p_dos_weights, int *p_num_dos_files, int *p_read_restart,
                 char *p_restart_file, int *p_have_miller, int *p_miller,
                 int *p_is_siestados, int *p_is_vaspdos, int *p_need_md_run,
-                int *p_compare_modes, char *p_mode_compare_input, int *p_end_min_image )
+                int *p_compare_modes, char *p_mode_compare_input, int *p_end_min_image, 
+                int *p_need_cell, char *p_cell_output )
  {
    int iloop, icat, skip, noskip, lower_case, leave_case;
    int end_of_input, itsanum, error, ip, iii, found_doscar;
@@ -777,6 +778,17 @@ int read_input( FILE *input_fp, char *p_title, char *p_master_input,
                                    tok=tok_get( input_fp, skip, leave_case );
                                    strcpy(p_gulp_output,tok);
 				   break;
+				   
+			    case CELL_FILE_NEEDED : *p_need_cell = TRUE;
+                                   if (!(tok=tok_get( input_fp, skip, leave_case )))
+                                   {
+                                      printf("ERROR: No file name given for requested cell file output\n");
+                                      exit(0);
+                                   }					
+                                   printf("CELL DEBUG\n");
+                                   strcpy(p_cell_output,tok);
+                                   break;
+
 
                             case DOS_FILE_NEEDED : *p_need_dos = TRUE;
                                    tok=tok_get( input_fp, skip, leave_case );
