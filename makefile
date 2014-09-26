@@ -39,7 +39,7 @@ COBJS = main.o read_input.o read_car.o locate_string.o read_line.o \
         move_selected_atoms.o write_pdb.o read_force_block.o \
         react_coord.o mol_dot.o mol_dist.o read_doscar.o write_doscsv.o \
         smear_dos.o read_xdatcar.o read_fdf.o read_siesta_vectors.o \
-        count_doscar.o reorientate_cell.o rotate_vector.o read_star_format.o
+        count_doscar.o reorientate_cell.o rotate_vector.o read_star_format.o write_cell.o
 
 #
 
@@ -107,6 +107,7 @@ write_gulp.o       : write_gulp.c cart_to_fract.c write_atom_data_gulp.c put_str
 write_atom_data_gulp.o : write_atom_data_gulp.c structures.h
 write_atom_data_poscar.o : write_atom_data_poscar.c structures.h
 write_poscar.o : write_poscar.c write_atom_data_poscar.c structures.h
+write_cell.o : write_cell.c write_atom_data_poscar.c structures.h
 sort_by_elem.o : sort_by_elem.c structures.h
 cut_to_uscore.o : cut_to_uscore.c 
 cut_to_dot.o : cut_to_dot.c 
