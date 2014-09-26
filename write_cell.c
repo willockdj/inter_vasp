@@ -206,5 +206,4 @@ fprintf( fp,"%%block species_pot\n");
 fprintf( fp,"%%endblock species_pot\n");
 fprintf( fp,"kpoint_mp_grid 1 1 1\n");
 return;
-}
-                                                                                                                                                                                                 210,1         Bot
+}  
