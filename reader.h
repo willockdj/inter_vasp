@@ -12,7 +12,7 @@ enum {TITLE = 1,
 
 enum { CAR_FILE_NEEDED = 101, POSCAR_FILE_NEEDED, ARC_FILE_NEEDED,\
        FREQUENCY, FORCES, CONVERGENCE, PDB_FILE_NEEDED, GULP_FILE_NEEDED, \
-       SHELLS, DOS_FILE_NEEDED, PART_DOS_NEEDED, ENERGY };
+       SHELLS, DOS_FILE_NEEDED, PART_DOS_NEEDED, ENERGY, CELL_FILE_NEEDED };
 
 enum {MAYBE = 201, YES, NO, ALL};
 
@@ -52,7 +52,7 @@ enum {BLANK_DIRECT = 999};
               "freq", FREQUENCY, "forc", FORCES, "conv", CONVERGENCE,\
               "pdb_",PDB_FILE_NEEDED,"gulp", GULP_FILE_NEEDED,\
               "shel", SHELLS, "dos_", DOS_FILE_NEEDED, "part", PART_DOS_NEEDED,\
-              "ener", ENERGY, "",NODIRECT
+              "ener", ENERGY, "cell", CELL_FILE_NEEDED, "",NODIRECT
 
 #define THIRD_DIRECTIVE_LIST \
 	   "", NODIRECT
