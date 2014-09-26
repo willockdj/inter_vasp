@@ -58,7 +58,8 @@ int read_input( FILE *input_fp, char *p_title, char *p_master_input,
                 double *p_dos_weights, int *p_num_dos_files, int *p_read_restart,
                 char *p_restart_file, int *p_have_miller, int *p_miller,
                 int *p_is_siestados, int *p_is_vaspdos, int *p_need_md_run,  
-                int *p_compare_modes, char *p_mode_compare_input, int *p_end_min_image);
+                int *p_compare_modes, char *p_mode_compare_input, int *p_end_min_image, 
+                int *p_need_cell, char *p_cell_output);
 
 int read_car( FILE *fp, int *p_header_line, int *p_title_line,
               atom *p_molecule, int *p_date_line, int *p_pbc, int *p_num_atoms,
@@ -136,6 +137,12 @@ void write_gulp(FILE *fp, int *p_title_line, atom *p_molecule, int num_atoms,
                 int need_shells, labels *p_shell_species, int num_shell_species);
 
 void write_poscar( FILE *fp, atom *p_molecule, double *p_fract_coords,
+                   atom_number *p_types, int num_types,
+                   double *p_latt_vec, double *p_scale_factor, int num_atoms,
+                   int *p_title_line, char *p_c_title_line, int pbc, 
+                   int is_fract, coord_flags *p_fix_flags);
+                   
+void write_cell( FILE *fp, atom *p_molecule, double *p_fract_coords,
                    atom_number *p_types, int num_types,
                    double *p_latt_vec, double *p_scale_factor, int num_atoms,
                    int *p_title_line, char *p_c_title_line, int pbc, 
@@ -358,6 +365,7 @@ int main(argc, argv)
   char mode_compare_input[60];
   char command[60];
   char energy_output[60];
+  char cell_output[60];
 
 /******************************************************************/
 /*** Variables specific to the job in hand ************************/
@@ -381,6 +389,7 @@ int main(argc, argv)
   FILE *fp_doscar_input;
   FILE *fp_dos_output;
   FILE *fp_input;
+  FILE *fp_cell_output;
 
 double fract_coords[3*MAXATOMS], end_fract_coords[3*MAXATOMS];
 double inter_vec[3*MAXATOMS];
@@ -423,6 +432,7 @@ int any_rec, matched_neigh;
 int read_restart;
 int num_columns;
 int num_slab_atoms;
+int need_cell;
 
 group_lists groups;
 
@@ -484,6 +494,7 @@ is_siesta = FALSE;
 need_car = FALSE;
 need_shift = FALSE;
 need_pdb = FALSE;
+need_cell = FALSE;
 need_gulp = FALSE;
 need_shells = FALSE;
 num_shell_species=-1;
@@ -553,7 +564,7 @@ read_input( fp_control_file, &c_title_line[0], &master_input[0],
             &dos_files[0], &dos_weights[0], &num_dos_files,  
             &read_restart, &restart_file[0], &have_miller, &miller[0],
             &is_siestados, &is_vaspdos, &need_md_run,
-            &compare_modes, &mode_compare_input[0], &end_min_image );
+            &compare_modes, &mode_compare_input[0], &end_min_image, &need_cell, &cell_output[0] );
 
 if (need_md_run)
   {
@@ -1307,6 +1318,10 @@ if (need_poscar)
 	{
 	  printf("Will produce a POSCAR file called %s\n", poscar_output);
 	}
+if (need_cell)
+ 	{
+	  printf("Will produce a cell file called %s\n", poscar_output);
+ 	}
 if (need_mdtraj)
         {
           printf("Will convert the trajectory file %s to format ", mdtraj_input);
@@ -2046,6 +2061,21 @@ if (need_poscar)
                   &title_line[0], &c_title_line[0], pbc, is_fract, &fix_flags[0]);
 
     fclose(fp_vasp_output);
+  }
+  
+if (need_cell)
+  {
+    open_file( &fp_cell_output, cell_output, "w");
+ 
+    sort_by_elem( &molecule[0], num_mol_members[0], &types[0], num_types);
+ 
+    printf("Writing new .cell format file: %s\n", poscar_output);
+ 
+    write_cell( fp_cell_output, &molecule[0],  &fract_coords[0],
+                  &types[0], num_types, &latt_vec[0], &scale_factor, num_atoms,
+                  &title_line[0], &c_title_line[0], pbc, is_fract, &fix_flags[0]);
+ 
+    fclose(fp_cell_output);
   }
 
 printf("Structure as currently held: %s\n",master_input);
