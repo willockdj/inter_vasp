@@ -150,7 +150,12 @@
 
                  done = done || strcmp(p_key2, tok2) == 0;      
                  printf("Read >>%s<< and >>%s<<\n", tok, tok2);
-                 if ( done ) printf("Happy with that!\n");
+                 if ( done )
+                   {
+                      printf("Happy with that!\n");
+                      *p_found = TRUE;
+                      return;
+                   }
 
               }
             else if ( tok2 && strcmp(p_key,"none") == 0) 

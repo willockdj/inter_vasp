@@ -25,16 +25,23 @@ void smear_dos( dos *p_dos, int num_dos, double smear )
   int num_to_skip;
 
   double pre_exp, centre;
-  double temp[MAX_DOS], temp2[MAX_DOS], arg;
+  double arg;
   double two_smear2, disp, disp2;
   double updos_max, uptotdos_max, upscale, downdos_max, downtotdos_max, downscale;
+  double *p_temp, *p_temp2;
+  double *p_this_temp, *p_this_temp2;
 
   double de;
 
   dos *p_this_dos, *p_now_dos;
 
-  printf("Entered smear_dos will apply smearing width %10.6f\n",
-                               smear);
+  printf("Entered smear_dos will apply smearing width %10.6f to %d dos data points\n",
+                               smear, num_dos);
+
+// Malloc the temporary arrays
+
+  p_temp =(double*)malloc(num_dos*sizeof(double));
+  p_temp2=(double*)malloc(num_dos*sizeof(double));
 
   pre_exp = 1/ ( smear * sqrt( 2.0 * pi));
   two_smear2 = 2.0 * smear * smear;
@@ -47,11 +54,12 @@ void smear_dos( dos *p_dos, int num_dos, double smear )
 
   printf("Delta E between raw data points = %10.6f\n", de);
 
-  p_this_dos= p_dos;
+  p_this_dos= p_dos; p_this_temp= p_temp; p_this_temp2= p_temp2;
+
   for(iloop=0; iloop < num_dos; iloop++)
     {
-       temp[iloop]=0.0;
-       temp2[iloop]=0.0;
+       *p_this_temp=0.0;
+       *p_this_temp2=0.0;
        centre = p_this_dos->energy;
 
        p_now_dos= p_dos;
@@ -67,8 +75,8 @@ void smear_dos( dos *p_dos, int num_dos, double smear )
 /***************************************************/
            if ( arg < 14 )
              {
-               temp[iloop] += p_now_dos->up_dos * pre_exp * exp( -arg);
-               temp2[iloop] += p_now_dos->down_dos * pre_exp * exp( -arg);
+               *p_this_temp += p_now_dos->up_dos * pre_exp * exp( -arg);
+               *p_this_temp2 += p_now_dos->down_dos * pre_exp * exp( -arg);
              }
            p_now_dos++;
          }
@@ -77,22 +85,26 @@ void smear_dos( dos *p_dos, int num_dos, double smear )
 /** Record maximum in smeared spectrum to allow ****/
 /** scaling of the tot_dos curve                ****/
 /***************************************************/
-       if (temp[iloop] > updos_max ) updos_max = temp[iloop];
-       if (temp2[iloop] > downdos_max ) downdos_max = temp2[iloop];
+       if (*p_this_temp  > updos_max   ) updos_max   = *p_this_temp;
+       if (*p_this_temp2 > downdos_max ) downdos_max = *p_this_temp2;
 
-       p_this_dos++;
+       p_this_dos++; p_this_temp++; p_this_temp2++;
     }
 
+  printf("temporary smeared version created\n");
 /****************************************************/
 /** Copy back the smeared DOS ***********************/
 /** and include smearing in integration of dos ******/
 /****************************************************/
+  p_this_temp= p_temp; p_this_temp2= p_temp2;
+ 
   p_this_dos= p_dos;
-  p_this_dos->up_dos = temp[0];
-  p_this_dos->down_dos = temp2[0];
-  p_this_dos->up_totdos = temp[0] * de;
-  p_this_dos->down_totdos = temp2[0] * de;
-  p_this_dos++;
+  p_this_dos->up_dos = *p_this_temp;
+  p_this_dos->down_dos = *p_this_temp2;
+  p_this_dos->up_totdos = *p_this_temp * de;
+  p_this_dos->down_totdos = *p_this_temp2 * de;
+
+  p_this_dos++; p_this_temp++; p_this_temp2++;
 
 /****************************************************/
 /** tot_dos is an integration so must have maximum **/
@@ -103,11 +115,12 @@ void smear_dos( dos *p_dos, int num_dos, double smear )
  
   for(iloop=1; iloop < num_dos; iloop++)
     {
-       p_this_dos->up_dos = temp[iloop];
-       p_this_dos->down_dos = temp2[iloop];
-       p_this_dos->up_totdos = ( (p_this_dos-1)->up_totdos + de * temp[iloop]);
-       p_this_dos->down_totdos = ( (p_this_dos-1)->down_totdos + de * temp[iloop]);
-       p_this_dos++;
+       p_this_dos->up_dos = *p_this_temp;
+       p_this_dos->down_dos = *p_this_temp2;
+       p_this_dos->up_totdos = ( (p_this_dos-1)->up_totdos + de * *p_this_temp);
+       p_this_dos->down_totdos = ( (p_this_dos-1)->down_totdos + de * *p_this_temp);
+
+       p_this_dos++; p_this_temp++; p_this_temp2++;
     }
        
   uptotdos_max = (p_dos + num_dos -1 )->up_totdos;
@@ -131,6 +144,8 @@ void smear_dos( dos *p_dos, int num_dos, double smear )
                                                p_this_dos->down_totdos);
       p_this_dos++;
     }
+
+  free(p_temp); free(p_temp2);
 
   return;
 }

@@ -30,7 +30,7 @@ void fract_to_cart( double *cart_x, double *cart_y, double *cart_z,
 /* ------------------------------------------------------------ */
 
 void write_car( FILE *fp, int *p_header_line, int *p_title_line, char *p_c_title_line,
-		int *p_date_line, atom *p_molecule, int *p_mol_number,
+		int *p_date_line, atom *p_molecule, int *p_mol_number, int use_mols,
                 int pbc, double *p_abc, int num_atoms, double scale_factor, 
                 int start_frame, int *p_super, double *p_latt_vec, 
                 double *p_recip_latt_vec, coord_flags *p_fix_flags, 
@@ -81,23 +81,29 @@ void write_car( FILE *fp, int *p_header_line, int *p_title_line, char *p_c_title
 
 /* check if periodic boundaries were set */
 
+//   printf("DEBUG>> dealing with pbc\n");
    if (pbc) 
     {
       if (start_frame) fprintf(fp, "PBC=ON\n");
+    }
+   else
+    {
+      if (start_frame) fprintf(fp,"PBC=OFF\n");
+    }
 
-/*
-      if (*p_title_line != -1)
-        {
-          put_string(fp, p_title_line,100);
-          fprintf(fp, "\n");
-        }
-      else
-        {
-          fprintf(fp, "%s", p_c_title_line);
-        }
-*/
 
-     fprintf(fp, "inter_vasp generated file\n");
+  if (*p_title_line != -1)
+    {
+      put_string(fp, p_title_line,100);
+//          fprintf(fp, "\n");
+    }
+  else
+    {
+      fprintf(fp, "%s\n", p_c_title_line);
+    }
+
+
+//     fprintf(fp, "inter_vasp generated file\n");
 
 /*** Use the first element of date_line equal -1 as an indicator that */
 /*** the header line has not been read                                  */
@@ -111,6 +117,8 @@ void write_car( FILE *fp, int *p_header_line, int *p_title_line, char *p_c_title
       fprintf(fp, "!DATE Mon Oct 12 12:17:26 1998\n");
      }
 
+   if (pbc)
+     {
       fprintf(fp,"PBC");
 
       for (iloop=0; iloop < 6; iloop++)
@@ -125,17 +133,10 @@ void write_car( FILE *fp, int *p_header_line, int *p_title_line, char *p_c_title
            }
        }
       fprintf(fp," (P1)\n");
-    }
-   else
-    {
-      if (start_frame) fprintf(fp,"PBC=OFF\n");
-      put_string(fp, p_title_line,100);
-      put_string(fp, p_date_line,100);
-    }
 
-    if (pbc)
-      {
         mol_current=0;
+//        printf("DEBUG>> writing..%d atoms\n", num_atoms);
+//        printf("DEBUG>> super %d %d %d.c\n", *p_super, *(p_super+1), *(p_super+2));
 
         p_atom=p_molecule;
         for (iavec=0; iavec<= (*p_super)-1; iavec++)
@@ -161,7 +162,7 @@ void write_car( FILE *fp, int *p_header_line, int *p_title_line, char *p_c_title
                   for (this_atom=0; this_atom < num_atoms; this_atom++)
                     {
 
-                       if (*(p_mol_number+this_atom) != mol_current)
+                       if (*(p_mol_number+this_atom) != mol_current && use_mols)
                          {
                             mol_current++;
                             fprintf(fp, "end\n");
@@ -177,8 +178,10 @@ void write_car( FILE *fp, int *p_header_line, int *p_title_line, char *p_c_title
                            current_atom.part_chge = *(p_magmom+this_atom);
                          }
 
-                       printf("writing data for atom at %10.6f %10.6f %10.6f\n",
-                                        current_atom.x,current_atom.y,current_atom.z);
+//                     printf("Writing atom %d scale_factor: %10.6f\n", this_atom, scale_factor);
+//                     printf("writing data for atom %s at %10.6f %10.6f %10.6f\n",
+//                                        current_atom.label, current_atom.x,current_atom.y,current_atom.z);
+
                        write_atom_data(fp, &current_atom, scale_factor, p_this_fix );
                        p_this_fix++;
                        p_atom++;
@@ -195,7 +198,7 @@ else
        for (this_atom=0; this_atom < num_atoms; this_atom++)
          {
 
-            if (*(p_mol_number+this_atom) != mol_current)
+            if (*(p_mol_number+this_atom) != mol_current && use_mols)
               {
                  mol_current++;
                  fprintf(fp, "end\n");

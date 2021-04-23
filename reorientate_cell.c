@@ -19,6 +19,8 @@ void unit_vector(double *p_vector);
 
 double size_vector(double *p_vector);
 
+double vec_dot(double *p_A, double *p_B);
+
 void vec_cross(double *p_A, double *p_B, double *p_cross);
 
 void latt_vecs_from_cart( double *p_latt_vec, 
@@ -44,25 +46,26 @@ void fract_to_cart( double *cart_x, double *cart_y, double *cart_z,
                     double *p_latt_vec );
 
 void reorientate_cell(atom *p_molecule, int *p_num_atoms, double *p_latt, 
-                      double *p_recip_latt, double *p_abc, int *p_miller,
+                      double *p_recip_latt, double *p_abc, int *p_miller, int num_miller,
                       double *p_new_latt, double *p_new_recip_latt, 
                       double *p_new_abc, atom *p_slab_mol, int *p_num_slab_atoms)
 {
   int iatom, jatom, iloop, end_list;
-  int num_new,need_rot, flag[MAXATOMS];
+  int num_new, need_rot1, need_rot, flag[MAXATOMS];
   int min_vecs[3], max_vecs[3], ivec1, ivec2, ivec3;
   int ilayers, map_top[MAXATOMS], map_bot[MAXATOMS];
-  int num_top, num_bot;
-  int found, doit, got_layers;
+  int num_top, num_bot, imiller, h_miller, k_miller, l_miller;
+  int found, doit, got_layers, need_faces_same, max_layers;
 
-  double dot, theta;
-  double surf_norm[3];
+  double dot, theta, theta1, siz;
+  double surf_norm[3], norm[3];
   double old_latt[9], old_recip_latt[9], old_abc[6];
-  double axis[3], origin[3], cross_check[3];
+  double axis[3], axis1[3], origin[3], cross_check[3];
   double vec[3], this_vec[3], frac[3];
   double u,v,w,dhkl, sum_vec[3];
   double trans_a[3], trans_b[3], trans_c[3]; 
-  double zmax, zmin;
+  double zmax, zmin, new_miller[MAX_MILLER3];
+  double hmil, kmil, lmil;
 
   atom *p_atom, *p_end_atom, *p_top_atom, *p_bot_atom;
   atom *p_this_atom, *p_next_atom;
@@ -74,11 +77,21 @@ void reorientate_cell(atom *p_molecule, int *p_num_atoms, double *p_latt,
   surf_norm[1] = *p_miller * *(p_recip_latt+1) + *(p_miller+1)* *(p_recip_latt+4) + *(p_miller+2)* *(p_recip_latt+7);
   surf_norm[2] = *p_miller * *(p_recip_latt+2) + *(p_miller+1)* *(p_recip_latt+5) + *(p_miller+2)* *(p_recip_latt+8);
 
+  siz=size_vector(&surf_norm[0]);
+
   unit_vector(&surf_norm[0]);
 
-  printf("Normal to surface of interest: %10.6f, %10.6f %10.6f\n", surf_norm[0], 
-                                                                   surf_norm[1], 
-                                                                   surf_norm[2]);
+  printf("Unit normal to surface of interest: %10.6f, %10.6f %10.6f\n", surf_norm[0], 
+                                                                        surf_norm[1], 
+                                                                        surf_norm[2]);
+
+  printf("Original size: %10.6f\n", siz);
+
+  hmil = siz*vec_dot(&surf_norm[0], p_latt);
+  kmil = siz*vec_dot(&surf_norm[0], p_latt+3);
+  lmil = siz*vec_dot(&surf_norm[0], p_latt+6);
+
+  printf("Recovered Miller indices          : %10.6f, %10.6f %10.6f\n", hmil, kmil, lmil);
 
 /** Work out angle between normal and c-vector ***/
 
@@ -86,24 +99,24 @@ void reorientate_cell(atom *p_molecule, int *p_num_atoms, double *p_latt,
 
   dot = dot / size_vector((p_latt+6));
 
-  theta = acos(dot);
+  theta1 = acos(dot);
 
-  printf("Angle between Miller plane normal and c-vector is: %10.6f degrees\n", theta*RAD_TO_DEG);
+  printf("Angle between Miller plane normal and c-vector is: %10.6f degrees\n", theta1*RAD_TO_DEG);
 
-  need_rot = TRUE;
-  if (theta < 1.0E-4)
+  need_rot1 = TRUE;
+  if (theta1 < 1.0E-4)
     {
       printf("This cell already has c-vector perpendicular to surface, no rotation required\n");
-      need_rot = FALSE;
-      axis[0] = 0.0;
-      axis[1] = 0.0;
-      axis[2] = 1.0;
+      need_rot1 = FALSE;
+      axis1[0] = 0.0;
+      axis1[1] = 0.0;
+      axis1[2] = 1.0;
     }
   else
     {
-      vec_cross(&surf_norm[0], (p_latt+6), &axis[0]);
+      vec_cross(&surf_norm[0], (p_latt+6), &axis1[0]);
 
-      unit_vector(&axis[0]);
+      unit_vector(&axis1[0]);
     }
 
 /*** Calculate surface vectors as difference between intercepts from Miller ***/
@@ -295,18 +308,18 @@ void reorientate_cell(atom *p_molecule, int *p_num_atoms, double *p_latt,
 
 /*** Rotate the new lattice vectors and the old to the new orientation                   ***/
 
-      if (need_rot)
+      if (need_rot1)
         {
           printf("Using rotation axis: %10.6f, %10.6f %10.6f angle %10.6f\n", 
-                                                 axis[0],  axis[1],  axis[2], theta*RAD_TO_DEG);
+                                                 axis1[0],  axis1[1],  axis1[2], theta1*RAD_TO_DEG);
 
-          rotate_vector(&old_latt[0], &axis[0], theta);
-          rotate_vector(&old_latt[3], &axis[0], theta);
-          rotate_vector(&old_latt[6], &axis[0], theta);
+          rotate_vector(&old_latt[0], &axis1[0], theta1);
+          rotate_vector(&old_latt[3], &axis1[0], theta1);
+          rotate_vector(&old_latt[6], &axis1[0], theta1);
 
-          rotate_vector(p_new_latt,   &axis[0], theta);
-          rotate_vector(p_new_latt+3, &axis[0], theta);
-          rotate_vector(p_new_latt+6, &axis[0], theta);
+          rotate_vector(p_new_latt,   &axis1[0], theta1);
+          rotate_vector(p_new_latt+3, &axis1[0], theta1);
+          rotate_vector(p_new_latt+6, &axis1[0], theta1);
 
           latt_vecs_from_cart( p_new_latt, p_new_recip_latt, p_new_abc ); 
 
@@ -326,14 +339,14 @@ void reorientate_cell(atom *p_molecule, int *p_num_atoms, double *p_latt,
        }
 
 /**** Rotate atoms by same amount ***/
-     if (need_rot)
+     if (need_rot1)
        {
          origin[0] = 0.0;
          origin[1] = 0.0;
          origin[2] = 0.0;
 
-         rotate_with_flags(p_slab_mol, &axis[0], &origin[0],
-                           theta, &flag[0], *p_num_atoms);   
+         rotate_with_flags(p_slab_mol, &axis1[0], &origin[0],
+                           theta1, &flag[0], *p_num_atoms);   
        }
 
 
@@ -373,6 +386,13 @@ void reorientate_cell(atom *p_molecule, int *p_num_atoms, double *p_latt,
          }
 
 /*** Rotate the new lattice vectors and the old to the new orientation                   ***/
+       printf("Old Lattice vectors before rotation: \n");
+       printf("\n %10.6f %10.6f %10.6f len: %10.6f\n", old_latt[0], old_latt[1], old_latt[2], 
+                                                                            size_vector(&old_latt[0]));
+       printf(" %10.6f %10.6f %10.6f len: %10.6f\n",   old_latt[3], old_latt[4], old_latt[5], 
+                                                                            size_vector(&old_latt[3]));
+       printf(" %10.6f %10.6f %10.6f len: %10.6f\n",   old_latt[6], old_latt[7], old_latt[8], 
+                                                                            size_vector(&old_latt[6]));
 
        printf("Using rotation axis: %10.6f, %10.6f %10.6f\n", axis[0],  axis[1],  axis[2]);
 
@@ -384,10 +404,63 @@ void reorientate_cell(atom *p_molecule, int *p_num_atoms, double *p_latt,
        rotate_vector(p_new_latt+3, &axis[0], theta);
        rotate_vector(p_new_latt+6, &axis[0], theta);
 
+       printf("New Lattice vectors after rotation: \n");
+       printf("\n %10.6f %10.6f %10.6f len: %10.6f\n", *p_new_latt, *(p_new_latt+1), *(p_new_latt+2), 
+                                                                            size_vector(p_new_latt));
+
+       printf(" %10.6f %10.6f %10.6f len: %10.6f\n",   *(p_new_latt+3), *(p_new_latt+4), *(p_new_latt+5), 
+                                                                            size_vector(p_new_latt+3));
+
+       printf(" %10.6f %10.6f %10.6f len: %10.6f\n",   *(p_new_latt+6), *(p_new_latt+7), *(p_new_latt+8), 
+                                                                            size_vector(p_new_latt+6));
+
+/*** If there are a larger set of miller planes rotate the normals and reform ****/
+
+       if (num_miller > 0)
+         {
+
+          for (imiller=1; imiller< num_miller; imiller++)
+            {
+               h_miller= 3*imiller; k_miller= h_miller+1; l_miller= k_miller+1;
+
+               norm[0]=  *p_recip_latt     * *(p_miller+h_miller) 
+                       + *(p_recip_latt+3) * *(p_miller+k_miller) 
+                       + *(p_recip_latt+6) * *(p_miller+l_miller);
+
+               norm[1]=  *(p_recip_latt+1) * *(p_miller+h_miller) 
+                       + *(p_recip_latt+4) * *(p_miller+k_miller) 
+                       + *(p_recip_latt+7) * *(p_miller+l_miller);
+
+               norm[2]=  *(p_recip_latt+2) * *(p_miller+h_miller) 
+                       + *(p_recip_latt+5) * *(p_miller+k_miller) 
+                       + *(p_recip_latt+8) * *(p_miller+l_miller);
+
+               printf("Miller set %d in old orientation of %d %d %d\n", imiller, *(p_miller+h_miller), 
+                                                                                 *(p_miller+k_miller), 
+                                                                                 *(p_miller+l_miller));
+
+               printf("Miller set %d gives normal vector in old orientation of %10.6f %10.6f %10.6f\n",
+                                                                                      imiller, norm[0], norm[1], norm[2]);
+               if (need_rot1) rotate_vector(&norm[0], &axis1[0], theta1);
+               if (need_rot)  rotate_vector(&norm[0], &axis[0],  theta );
+
+/*** norm is now a vector in the new cartessian space ****/
+
+               new_miller[h_miller-3]= *p_new_latt     * norm[0] + *(p_new_latt+1) * norm[1] + *(p_new_latt+2) * norm[2];
+               new_miller[k_miller-3]= *(p_new_latt+3) * norm[0] + *(p_new_latt+4) * norm[1] + *(p_new_latt+5) * norm[2];
+               new_miller[l_miller-3]= *(p_new_latt+6) * norm[0] + *(p_new_latt+7) * norm[1] + *(p_new_latt+8) * norm[2];
+
+               printf("Miller set %d gives normal vector in new orientation of %10.6f %10.6f %10.6f\n",
+                                                                                      imiller, norm[0], norm[1], norm[2]);
+
+               printf("Miller indices set %d reorientated to : %3.1f %3.1f %3.1f\n",
+                                imiller, new_miller[h_miller-3], new_miller[k_miller-3], new_miller[l_miller-3]);
+
+            }
+        }
+
 /*** Rotate atoms to final orientation ************************/
-       origin[0] = 0.0;
-       origin[1] = 0.0;
-       origin[2] = 0.0;
+       origin[0] = 0.0; origin[1] = 0.0; origin[2] = 0.0;
 
        rotate_with_flags(p_slab_mol, &axis[0], &origin[0],
                          theta, &flag[0], *p_num_atoms); 
@@ -418,8 +491,19 @@ void reorientate_cell(atom *p_molecule, int *p_num_atoms, double *p_latt,
 /**** The top and the bottom of the dhkl slab need not be equivalent this ***/
 /**** loop allows additional layers to be added until they are.           ***/
 
+  need_faces_same=FALSE;
+
+  if (need_faces_same)
+   {
+     max_layers= 10;
+   }
+  else
+   {
+     max_layers= 1;
+   }
+
   *(p_new_latt+8) = 0.0;
-  for (ilayers=0; ilayers<10; ilayers++)
+  for (ilayers=0; ilayers<max_layers; ilayers++)
    {
 
      *(p_new_latt+8) = *(p_new_latt+8) + dhkl;
@@ -811,7 +895,7 @@ if (!got_layers)
   {
     printf("ERROR: not found slab for this miller plane with equivalent faces\n");
     printf("DEBUG: Continuing anyway.............\n\n");
-    exit(0);
+//    exit(0);
   }
 
 /*** remove atoms flagged FALSE, i.e. original atoms that are not in new cell ***/

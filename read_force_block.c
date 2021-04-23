@@ -1,6 +1,8 @@
 /***************************************************************************/
 /*** Read in a block of forces from VASP OUTCAR file ***********************/
 /*** Dave Willock May 04 ***************************************************/
+/*** updated for mallocing: num_atoms is proper counter not highest index **/
+/*** Dave Willock Nov 17 ***************************************************/
 /***************************************************************************/
 
 #include <stdio.h>
@@ -30,7 +32,7 @@ void read_force_block( FILE *fp, e_vec *p_forces, int num_atoms)
 
   printf("Reading forces for %d atoms\n", num_atoms);
   printf("throwing >>%s<<\n",tok);
-  for (iatom = 0; iatom <= num_atoms; iatom++)
+  for (iatom = 0; iatom < num_atoms; iatom++)
     {
       tok_get( fp, skip, FALSE);
       for ( jloop = 0; jloop <= 1; jloop++ ) tok= tok_get( fp, noskip, FALSE);

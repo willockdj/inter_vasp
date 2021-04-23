@@ -1,0 +1,264 @@
+gcc -Wall   -c -o main.o main.c
+main.c: In function ‘main’:
+main.c:2551:6: warning: passing argument 1 of ‘sprintf’ from incompatible pointer type [enabled by default]
+      sprintf(&(num_oxy_species[0].atom_type),"lattice");
+      ^
+In file included from main.c:11:0:
+/usr/include/stdio.h:364:12: note: expected ‘char * __restrict__’ but argument is of type ‘char (*)[10]’
+ extern int sprintf (char *__restrict __s,
+            ^
+main.c:2552:6: warning: passing argument 1 of ‘sprintf’ from incompatible pointer type [enabled by default]
+      sprintf(&(num_oxy_species[1].atom_type),"hydroxyl");
+      ^
+In file included from main.c:11:0:
+/usr/include/stdio.h:364:12: note: expected ‘char * __restrict__’ but argument is of type ‘char (*)[10]’
+ extern int sprintf (char *__restrict __s,
+            ^
+main.c:2553:6: warning: passing argument 1 of ‘sprintf’ from incompatible pointer type [enabled by default]
+      sprintf(&(num_oxy_species[2].atom_type),"water");
+      ^
+In file included from main.c:11:0:
+/usr/include/stdio.h:364:12: note: expected ‘char * __restrict__’ but argument is of type ‘char (*)[10]’
+ extern int sprintf (char *__restrict __s,
+            ^
+main.c:2554:6: warning: passing argument 1 of ‘sprintf’ from incompatible pointer type [enabled by default]
+      sprintf(&(num_oxy_species[3].atom_type),"alcohol");
+      ^
+In file included from main.c:11:0:
+/usr/include/stdio.h:364:12: note: expected ‘char * __restrict__’ but argument is of type ‘char (*)[10]’
+ extern int sprintf (char *__restrict __s,
+            ^
+main.c:3009:65: error: ‘fix_flags’ undeclared (first use in this function)
+                  &super[0], &latt_vec[0], &recip_latt_vec[0],  &fix_flags[0], 
+                                                                 ^
+main.c:3009:65: note: each undeclared identifier is reported only once for each function it appears in
+main.c:3081:18: warning: passing argument 12 of ‘read_xdatcar’ from incompatible pointer type [enabled by default]
+                  &atom_num, &num_labels );
+                  ^
+main.c:132:5: note: expected ‘int *’ but argument is of type ‘int (*)[40]’
+ int read_xdatcar(FILE *fp, int *p_num_frames, atom *p_molecule, int num_atoms,
+     ^
+main.c:3263:22: warning: passing argument 12 of ‘read_xdatcar’ from incompatible pointer type [enabled by default]
+                      &atom_num, &num_labels );
+                      ^
+main.c:132:5: note: expected ‘int *’ but argument is of type ‘int (*)[40]’
+ int read_xdatcar(FILE *fp, int *p_num_frames, atom *p_molecule, int num_atoms,
+     ^
+main.c:3298:18: warning: format ‘%f’ expects argument of type ‘double’, but argument 4 has type ‘double *’ [-Wformat=]
+                  printf("Atom %d labeled %s moved by %10.6f  %10.6f  %10.6f \n", iloop, p_step_atom->label, vec );
+                  ^
+main.c:3298:18: warning: format ‘%f’ expects a matching ‘double’ argument [-Wformat=]
+main.c:3298:18: warning: format ‘%f’ expects a matching ‘double’ argument [-Wformat=]
+main.c:550:8: warning: unused variable ‘ion_labels’ [-Wunused-variable]
+ labels ion_labels[MAXTYPES];
+        ^
+main.c:534:15: warning: variable ‘surf_super’ set but not used [-Wunused-but-set-variable]
+ int super[3], surf_super[3];
+               ^
+main.c:517:18: warning: unused variable ‘state’ [-Wunused-variable]
+ int space_group, state;
+                  ^
+main.c:516:38: warning: unused variable ‘num_species’ [-Wunused-variable]
+ int num_top_chars, num_bottom_chars, num_species;
+                                      ^
+main.c:516:20: warning: unused variable ‘num_bottom_chars’ [-Wunused-variable]
+ int num_top_chars, num_bottom_chars, num_species;
+                    ^
+main.c:516:5: warning: unused variable ‘num_top_chars’ [-Wunused-variable]
+ int num_top_chars, num_bottom_chars, num_species;
+     ^
+main.c:515:19: warning: unused variable ‘bottom_bit’ [-Wunused-variable]
+ int top_bit[500], bottom_bit[500];
+                   ^
+main.c:515:5: warning: unused variable ‘top_bit’ [-Wunused-variable]
+ int top_bit[500], bottom_bit[500];
+     ^
+main.c:510:8: warning: variable ‘dos_norm’ set but not used [-Wunused-but-set-variable]
+ double dos_norm, hemi_rad, clus_rad;
+        ^
+main.c:507:28: warning: unused variable ‘cstep’ [-Wunused-variable]
+ double scale_factor, step, cstep, step_inc;
+                            ^
+main.c:503:26: warning: unused variable ‘p_end_fract_coords’ [-Wunused-variable]
+ double *p_fract_coords, *p_end_fract_coords;
+                          ^
+main.c:494:9: warning: unused variable ‘fp_vasp_report’ [-Wunused-variable]
+   FILE *fp_vasp_report;
+         ^
+main.c:491:9: warning: unused variable ‘fp_onetep_input’ [-Wunused-variable]
+   FILE *fp_onetep_input;
+         ^
+main.c:490:9: warning: unused variable ‘fp_siesta_input’ [-Wunused-variable]
+   FILE *fp_siesta_input;
+         ^
+main.c:480:9: warning: unused variable ‘fp_gulp_input’ [-Wunused-variable]
+   FILE *fp_gulp_input;
+         ^
+main.c:479:9: warning: unused variable ‘fp_master_struct’ [-Wunused-variable]
+   FILE *fp_master_struct;
+         ^
+main.c:477:9: warning: unused variable ‘fp_list_file’ [-Wunused-variable]
+   FILE *fp_list_file;
+         ^
+main.c:476:9: warning: unused variable ‘fp_end_input_struct’ [-Wunused-variable]
+   FILE *fp_end_input_struct;
+         ^
+main.c:433:9: warning: unused variable ‘p_key’ [-Wunused-variable]
+   char *p_key;
+         ^
+main.c:431:19: warning: unused variable ‘dfilling’ [-Wunused-variable]
+   double dcentre, dfilling;
+                   ^
+main.c:431:10: warning: unused variable ‘dcentre’ [-Wunused-variable]
+   double dcentre, dfilling;
+          ^
+main.c:430:24: warning: unused variable ‘speed’ [-Wunused-variable]
+   double set_temp, ke, speed;
+                        ^
+main.c:430:20: warning: unused variable ‘ke’ [-Wunused-variable]
+   double set_temp, ke, speed;
+                    ^
+main.c:430:10: warning: unused variable ‘set_temp’ [-Wunused-variable]
+   double set_temp, ke, speed;
+          ^
+main.c:429:25: warning: unused variable ‘distance_left’ [-Wunused-variable]
+   double distance_gone, distance_left;
+                         ^
+main.c:429:10: warning: unused variable ‘distance_gone’ [-Wunused-variable]
+   double distance_gone, distance_left;
+          ^
+main.c:427:10: warning: unused variable ‘total_mass’ [-Wunused-variable]
+   double total_mass;
+          ^
+main.c:425:10: warning: unused variable ‘last_cofm’ [-Wunused-variable]
+   double last_cofm[3];
+          ^
+main.c:423:10: warning: variable ‘shift_centre’ set but not used [-Wunused-but-set-variable]
+   double shift_centre[3];
+          ^
+main.c:419:10: warning: unused variable ‘timestep’ [-Wunused-variable]
+   double timestep;
+          ^
+main.c:409:19: warning: unused variable ‘move_dist’ [-Wunused-variable]
+   double unit[3], move_dist;
+                   ^
+main.c:409:10: warning: unused variable ‘unit’ [-Wunused-variable]
+   double unit[3], move_dist;
+          ^
+main.c:407:36: warning: unused variable ‘size’ [-Wunused-variable]
+   double vec[3], vec1[3], vec2[3], size;
+                                    ^
+main.c:407:27: warning: unused variable ‘vec2’ [-Wunused-variable]
+   double vec[3], vec1[3], vec2[3], size;
+                           ^
+main.c:407:18: warning: unused variable ‘vec1’ [-Wunused-variable]
+   double vec[3], vec1[3], vec2[3], size;
+                  ^
+main.c:404:51: warning: unused variable ‘dot_list’ [-Wunused-variable]
+   double abc[6], new_abc[6], theta, dot, tot_dot, dot_list[MAXMODES];
+                                                   ^
+main.c:404:42: warning: unused variable ‘tot_dot’ [-Wunused-variable]
+   double abc[6], new_abc[6], theta, dot, tot_dot, dot_list[MAXMODES];
+                                          ^
+main.c:404:37: warning: unused variable ‘dot’ [-Wunused-variable]
+   double abc[6], new_abc[6], theta, dot, tot_dot, dot_list[MAXMODES];
+                                     ^
+main.c:390:18: warning: unused variable ‘line_lengths’ [-Wunused-variable]
+   int num_lines, line_lengths[MAX_LINES];
+                  ^
+main.c:384:33: warning: unused variable ‘num_steps_left’ [-Wunused-variable]
+   int starting_late, now_close, num_steps_left;
+                                 ^
+main.c:384:7: warning: variable ‘starting_late’ set but not used [-Wunused-but-set-variable]
+   int starting_late, now_close, num_steps_left;
+       ^
+main.c:382:7: warning: unused variable ‘ion_number’ [-Wunused-variable]
+   int ion_number[MAXTYPES];
+       ^
+main.c:381:18: warning: unused variable ‘num_in_this_mol’ [-Wunused-variable]
+   int start_mol, num_in_this_mol;
+                  ^
+main.c:378:13: warning: unused variable ‘index’ [-Wunused-variable]
+   int idos, index, itype, ispecies;
+             ^
+main.c:377:39: warning: unused variable ‘iline’ [-Wunused-variable]
+   int ishell, icomp, icoord, iletter, iline;
+                                       ^
+main.c:377:22: warning: variable ‘icoord’ set but not used [-Wunused-but-set-variable]
+   int ishell, icomp, icoord, iletter, iline;
+                      ^
+main.c:377:15: warning: unused variable ‘icomp’ [-Wunused-variable]
+   int ishell, icomp, icoord, iletter, iline;
+               ^
+main.c:375:23: warning: unused variable ‘mol_cnt_ind’ [-Wunused-variable]
+   int find_molecules, mol_cnt_ind, mol_ind;
+                       ^
+main.c:373:7: warning: unused variable ‘map_atoms’ [-Wunused-variable]
+   int map_atoms[MAXATOMS];
+       ^
+main.c:367:58: warning: unused variable ‘jmode’ [-Wunused-variable]
+   int end_num_atoms, end_num_shells, start_frame, imode, jmode;
+                                                          ^
+main.c:367:22: warning: unused variable ‘end_num_shells’ [-Wunused-variable]
+   int end_num_atoms, end_num_shells, start_frame, imode, jmode;
+                      ^
+main.c:366:56: warning: unused variable ‘isign’ [-Wunused-variable]
+   int num_chosen_atoms, num_free, match, imatch, imat, isign;
+                                                        ^
+main.c:366:35: warning: unused variable ‘match’ [-Wunused-variable]
+   int num_chosen_atoms, num_free, match, imatch, imat, isign;
+                                   ^
+main.c:366:25: warning: unused variable ‘num_free’ [-Wunused-variable]
+   int num_chosen_atoms, num_free, match, imatch, imat, isign;
+                         ^
+main.c:365:37: warning: unused variable ‘num_new_modes’ [-Wunused-variable]
+   int num_new_atoms, num_new_types, num_new_modes;
+                                     ^
+main.c:365:22: warning: unused variable ‘num_new_types’ [-Wunused-variable]
+   int num_new_atoms, num_new_types, num_new_modes;
+                      ^
+main.c:365:7: warning: unused variable ‘num_new_atoms’ [-Wunused-variable]
+   int num_new_atoms, num_new_types, num_new_modes;
+       ^
+main.c:355:43: warning: unused variable ‘max_freq_shift’ [-Wunused-variable]
+   double dist, dmin, diffx, diffy, diffz, max_freq_shift;
+                                           ^
+main.c:355:36: warning: unused variable ‘diffz’ [-Wunused-variable]
+   double dist, dmin, diffx, diffy, diffz, max_freq_shift;
+                                    ^
+main.c:355:29: warning: unused variable ‘diffy’ [-Wunused-variable]
+   double dist, dmin, diffx, diffy, diffz, max_freq_shift;
+                             ^
+main.c:355:22: warning: unused variable ‘diffx’ [-Wunused-variable]
+   double dist, dmin, diffx, diffy, diffz, max_freq_shift;
+                      ^
+main.c:355:16: warning: unused variable ‘dmin’ [-Wunused-variable]
+   double dist, dmin, diffx, diffy, diffz, max_freq_shift;
+                ^
+main.c:354:10: warning: unused variable ‘new_eigenvalues’ [-Wunused-variable]
+   double new_eigenvalues[MAXMODES];
+          ^
+main.c:345:9: warning: unused variable ‘new_eigenvecs’ [-Wunused-variable]
+   e_vec new_eigenvecs[MAXMODES];
+         ^
+main.c:337:9: warning: unused variable ‘p_end_shells’ [-Wunused-variable]
+   atom *p_end_shells;
+         ^
+main.c:335:8: warning: unused variable ‘chosen_one_end’ [-Wunused-variable]
+   atom chosen_one_end[MAXATOMS];
+        ^
+main.c:334:8: warning: unused variable ‘chosen_one’ [-Wunused-variable]
+   atom chosen_one[MAXATOMS];
+        ^
+In file included from main.c:26:0:
+main.c: At top level:
+reader.h:103:14: warning: ‘target’ defined but not used [-Wunused-variable]
+ static char  target[BUFFER];
+              ^
+reader.h:104:14: warning: ‘buf’ defined but not used [-Wunused-variable]
+ static char  buf[BUFFER];
+              ^
+reader.h:106:15: warning: ‘last_tok’ defined but not used [-Wunused-variable]
+ static char  *last_tok;
+               ^
+make: *** [main.o] Error 1

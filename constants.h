@@ -8,3 +8,5 @@
 #define INTUNITS_TO_EV 964.853353 /* convert from internal units to eV */
 
 #define BOLTZ 0.831447209 /* Boltzmann constant in internal units */
+
+#define BOHR 0.52917721 /* Bohr unit in Angstroms */

@@ -132,17 +132,13 @@ printf("Inter-centre vector      %10.6f %10.6f %10.6f\n",
                                            *(p_inter_cofm+1), 
                                            *(p_inter_cofm+2));
 
-/**** Redefine chosen_ones relative to the c_of_m *****/
+/**** show co-ordinates of chosen_ones relative to the c_of_m *****/
 
 for (icomp=0; icomp<3; icomp++) vec[icomp]= -*(p_start_cofm+icomp); 
 
-move_selected_atoms(p_molecule, *p_num_chosen_atoms, 
-                                     p_chosen_indices, vec );
+//move_selected_atoms(p_molecule, *p_num_chosen_atoms, 
+//                                     p_chosen_indices, vec );
 
-for (icomp=0; icomp<3; icomp++) vec[icomp]= -*(p_end_cofm+icomp); 
-
-move_selected_atoms(p_end_molecule, *p_num_chosen_atoms, 
-                                          p_chosen_indices, vec );
 
 printf("Initial co-ordinates of selected molecule relative to c_of_m\n");
 
@@ -151,10 +147,15 @@ for (iatom= 0; iatom <= *p_num_chosen_atoms; iatom++)
      index= *(p_chosen_indices+iatom);
      p_atom=p_molecule+index;
      printf("%s %10.6f %10.6f %10.6f\n", p_atom->label, 
-                                         p_atom->x,
-                                         p_atom->y,
-                                         p_atom->z);
+                                         p_atom->x + vec[0],
+                                         p_atom->y + vec[1],
+                                         p_atom->z + vec[2]);
   }
+
+for (icomp=0; icomp<3; icomp++) vec[icomp]= -*(p_end_cofm+icomp); 
+
+//move_selected_atoms(p_end_molecule, *p_num_chosen_atoms, 
+//                                          p_chosen_indices, vec );
 
 printf("Final co-ordinates of selected molecule relative to c_of_m\n");
 
@@ -163,9 +164,9 @@ for (iatom= 0; iatom <= *p_num_chosen_atoms; iatom++)
      index= *(p_chosen_indices+iatom);
      p_atom=p_end_molecule+index;
      printf("%s %10.6f %10.6f %10.6f\n", p_atom->label, 
-                                         p_atom->x,
-                                         p_atom->y,
-                                         p_atom->z);
+                                         p_atom->x + vec[0],
+                                         p_atom->y + vec[1],
+                                         p_atom->z + vec[2]);
   }
 
 return;

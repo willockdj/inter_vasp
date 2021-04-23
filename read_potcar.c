@@ -24,7 +24,7 @@ char * tok_get(FILE *input_fp, int skip_lines, int lower_case);
 /* read in a potcar file for VASP labels */
 
 int read_potcar( FILE *fp, atom *p_molecule,
-		 int *p_ion_number, int *p_num_types)
+		 atom_number *p_types, int *p_num_types)
 
 {
   int iloop, skip, iatom;
@@ -42,7 +42,7 @@ int read_potcar( FILE *fp, atom *p_molecule,
 
   skip = TRUE;
 
-  for ( iloop=0; iloop < *p_num_types; iloop++) 
+  for ( iloop=0; iloop <= *p_num_types; iloop++) 
      {
         tok= tok_get( fp, skip, FALSE);
 
@@ -74,24 +74,20 @@ int read_potcar( FILE *fp, atom *p_molecule,
                if ( *p_letter == '_' || *p_letter == ' ' || *p_letter == ':') *p_letter = '\0'; 
             }
 
-/*        while (tok)   */
-/*         {   */
-/*            p_label = tok;  */
-/*            tok= tok_get( fp, FALSE, FALSE);  */
-/*         }   */
 /****************************************************/
 /*** Put labels on the atom co-ordinate *************/
 /****************************************************/
-	for (iatom=0; iatom < *p_ion_number; iatom++)
+	for (iatom=0; iatom < p_types->num; iatom++)
            {
                strcpy(p_molecule->elem, p_label); 
 	       sprintf(p_molecule->label,"%s%d",p_label,iatom+1);
                strcpy(p_molecule->pot, "?"); 
                strcpy(p_molecule->group, "VASP"); 
-               printf("Assigned label %s to atom %d\n", p_molecule->elem, iatom);
+               printf("Assigned label %s and element %s to atom %d based on POTCAR information\n", 
+                                 p_molecule->label, p_molecule->elem, iatom);
 	       p_molecule++;
            }
-        p_ion_number++;
+        p_types++;
     }
 
   return 0;

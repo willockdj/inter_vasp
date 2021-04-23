@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* move_selected_molecule.c ; re-position any molecule fragment      */
+/* move_selected_atoms.c    ; re-position any molecule fragment      */
 /*                            according to indices supplied          */
 /*                            Dave Willock, begun Oct 04             */
 /*********************************************************************/

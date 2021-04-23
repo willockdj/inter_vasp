@@ -26,7 +26,8 @@ int read_line(FILE *fp, int *p_ichar);
 int locate_string( char *p_key, int *p_ichar, int num_of_chars );
 
 int read_atom_data(int *p_ichar, int *p_num_atoms, int at_end, int num_of_chars,
-                   int *p_num_of_mols, atom *p_atom, int *p_mol_number );
+                   int *p_num_of_mols, atom *p_atom, int *p_mol_number,
+                   int just_count );
 
 double get_doub(int *p_ichar, int num_of_chars, int *p_place, int *p_itsanum);
 
@@ -39,8 +40,8 @@ int read_car( FILE *fp, int *p_header_line, int *p_title_line,
               atom *p_molecule, int *p_date_line, int *p_pbc, int *p_num_atoms, 
               int *p_num_of_mols, int *p_num_mol_members, int *p_mol_number, 
               double *p_abc, int *p_been_before, group_lists *p_groups, 
-              int have_grp, int *p_num_grps, 
-              int find_fixed, coord_flags *p_fix_flags)
+              int have_grp, int *p_num_groups, int find_fixed, 
+              coord_flags *p_fix_flags, int just_count)
 {
   int ichar[LINESIZ];
   int place,itsanum;
@@ -100,7 +101,6 @@ int read_car( FILE *fp, int *p_header_line, int *p_title_line,
 
    if (*p_pbc == 1) 
      {
-        printf("Found PBC file....\n");
         num_of_chars= read_line(fp, &ichar[0]);
 
         place= -1;
@@ -126,73 +126,64 @@ int read_car( FILE *fp, int *p_header_line, int *p_title_line,
    p_atom= p_molecule;
    *p_num_mol_members=0;
 
-   debug=TRUE;
+   debug=FALSE;
    while (at_end != 2) 
      {
        num_of_chars= read_line( fp, &ichar[0]);
 
-       if (debug) printf("Reading atom data\n");
-
        at_end= read_atom_data(&ichar[0],p_num_atoms, at_end, num_of_chars,
-                          p_num_of_mols, p_atom, p_mol_number);
+                              p_num_of_mols, p_atom, 
+                              p_mol_number, just_count);
       
-       if (debug) printf("back...\n");
-
        if (at_end == 0)
          {
            ++*p_num_mol_members;
-           p_atom++;
-           p_mol_number++;
+           if (!just_count) p_atom++;
+//           p_mol_number++;
          }
      
-       if (at_end == 1)
+       if (at_end == 2)
          {
            p_num_mol_members++;
            *p_num_mol_members=0;
          }
     }
 
-   printf("All atoms read\n");
+   if (just_count) printf("All atoms counted\n");
+             else  printf("All atoms read\n");
 
 /***********************************************/
 /*** Look for GRUP group for intervasp *********/
 /*** Added May 04 DJW                  *********/
 /***********************************************/
 
-   if (have_grp)
+   if (have_grp && !just_count)
      {
-       printf("Looking for groups\n");
-
        p_atom= p_molecule;
-       printf("here 1...\n");
 
        p_groups->num_grp1 = -1;
-       printf("here 1...\n");
        p_groups->num_grp2 = -1;
-       printf("here 2...\n");
-       *p_num_grps = -1;
-       printf("here 3...\n");
+       *p_num_groups = -1;
+       
        for ( iloop = 0; iloop < *p_num_atoms; iloop++)
          {
            if (strcmp(p_atom->group, "GRP1") == 0 || strcmp(p_atom->group,"TOR1") == 0 
                                                            || strcmp(p_atom->group, "GRUP") == 0)
               {
-                printf("Read %s as a GRUP or GRP1 atom\n", p_atom->label);
-                if (p_groups->num_grp1 == -1) ++(*p_num_grps);
+                if (p_groups->num_grp1 == -1) ++(*p_num_groups);
                 (p_groups->num_grp1)++;
                 p_groups->group1[p_groups->num_grp1] = iloop;
               }
            if (strcmp(p_atom->group, "GRP2") == 0  || strcmp(p_atom->group,"TOR2") == 0 )
               {
-                printf("Read %s as a GRP2 atom\n", p_atom->label);
-                if (p_groups->num_grp2 == -1) ++(*p_num_grps);
+                if (p_groups->num_grp2 == -1) ++(*p_num_groups);
                 (p_groups->num_grp2)++;
                 p_groups->group2[p_groups->num_grp2] = iloop;
               }
            p_atom++;
          }
 
-       if (*p_num_grps == -1)
+       if (*p_num_groups == -1)
          {
            printf("ERROR : No GRUP,GRP1 or GRP2 group members found in car");
            printf(" file when they were expected!\n");
@@ -211,7 +202,7 @@ int read_car( FILE *fp, int *p_header_line, int *p_title_line,
 /*** Added Nov. 06 Dave Willock            *****/
 /***********************************************/
 
-   if (find_fixed)
+   if (find_fixed && !just_count)
      {
        p_atom= p_molecule;
        for ( iloop = 0; iloop < *p_num_atoms; iloop++)
@@ -236,9 +227,10 @@ int read_car( FILE *fp, int *p_header_line, int *p_title_line,
          }
      }
 
-  *p_num_atoms--;
-  *p_num_of_mols--;
+//  --*p_num_atoms;
+//  *p_num_of_mols--;
 
    debug=FALSE;
+   printf("Returning from read_car.. with %d atoms %d mols..\n", *p_num_atoms, *p_num_of_mols);
   return 0;
 }

@@ -52,16 +52,16 @@ char *tok;
         {
            skip= FALSE;
            tok = tok_get( fp, skip, TRUE);
-           printf("Read....y.....tok.....>>%s<<\n", tok);
+//           printf("Read....y.....tok.....>>%s<<\n", tok);
            if (tok) strcpy(cfy,tok);
                         else strcpy(cfy,"T");
        
            tok = tok_get( fp, skip, TRUE);
-           printf("Read....z.....tok.....>>%s<<\n", tok);
+//           printf("Read....z.....tok.....>>%s<<\n", tok);
            if (tok) strcpy(cfz,tok);
                         else strcpy(cfz,"T");
 
-           printf("Found flags : %s %s %s\n", cfx, cfy, cfz );
+//           printf("Found flags : %s %s %s\n", cfx, cfy, cfz );
             
         }
 
@@ -73,7 +73,7 @@ char *tok;
        for (i = 0; cfy[i] != '\0'; i++) cfy[i] = tolower(cfy[i]);
        for (i = 0; cfz[i] != '\0'; i++) cfz[i] = tolower(cfz[i]);
 
-       printf("DEBUG>> Read flags: %s %s %s\n", cfx, cfy, cfz);
+//       printf("DEBUG>> Read flags: %s %s %s\n", cfx, cfy, cfz);
 
        if (strcmp(cfx,"f") == 0) p_fix_flags->fx = TRUE;
        if (strcmp(cfy,"f") == 0) p_fix_flags->fy = TRUE;

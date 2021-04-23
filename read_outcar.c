@@ -49,7 +49,7 @@ int read_outcar( FILE *fp, atom *p_molecule, double *p_latt_vec,
                  int *p_num_atoms, atom_number *p_types, int *p_num_types,
                  int *p_num_modes, int need_freq, int need_force,
                  int need_energy, int *p_have_band, double *p_energy,
-                 int need_fermi, double *p_fermi )
+                 int need_fermi, double *p_fermi, int *p_num_energies, int just_count )
 
 {
   int iloop, jloop, skip, iatom;
@@ -75,6 +75,10 @@ int read_outcar( FILE *fp, atom *p_molecule, double *p_latt_vec,
   e_vec *p_this_eigenvec;
 
 /* DEBUG */
+  printf("Entered read_outcar routine ");
+
+  if (just_count) printf("just counting this time\n");
+  else            printf("will read data this time\n");
   printf("Will see end of file from >>%s<<\n", END_OF_INPUT);
 /* get all atom labels from POTCAR lines */
 /* up to stopper                         */
@@ -237,8 +241,11 @@ int read_outcar( FILE *fp, atom *p_molecule, double *p_latt_vec,
       printf("%2d %2s %3d\n", iloop, (p_types+iloop)->atom_type, (p_types+iloop)->num);
       *p_num_atoms += (p_types+iloop)->num+1;
     }
-  (*p_num_atoms)--;
-  printf("Max atom index = %d\n", *p_num_atoms);
+//  Note malloced version requires num_atoms to be counter rather than upper index
+//  Dave Willock Nov 2017
+//  (*p_num_atoms)--;
+  printf("num_atoms = %d\n", *p_num_atoms);
+
 
 /* get lattice vectors */
 
@@ -288,30 +295,33 @@ printf("Got all Lattice vectors\n");
 /*** Read in and label atoms *************/
 /*****************************************/
 
-p_atom=p_molecule;
-for ( itype=0; itype <= *p_num_types; itype++)
-  {
-    for ( iatom=0; iatom <= (p_types+itype)->num; iatom++)
-      {
-        p_atom->part_chge= 0.0;
-        strcpy(p_atom->pot, "?"); 
-        strcpy(p_atom->group, "VASP"); 
-        strcpy(p_atom->group_no, "X"); 
-        strcpy(p_atom->elem, (p_types+itype)->atom_type);
-        sprintf(p_atom->label,"%s%d",  (p_types+itype)->atom_type, iatom+1 );
+  if (!just_count)
+    {
+      p_atom=p_molecule;
+      for ( itype=0; itype <= *p_num_types; itype++)
+        {
+          for ( iatom=0; iatom <= (p_types+itype)->num; iatom++)
+            {
+              p_atom->part_chge= 0.0;
+              strcpy(p_atom->pot, "?"); 
+              strcpy(p_atom->group, "VASP"); 
+              strcpy(p_atom->group_no, "X"); 
+              strcpy(p_atom->elem, (p_types+itype)->atom_type);
+              sprintf(p_atom->label,"%s%d",  (p_types+itype)->atom_type, iatom+1 );
         
-        p_atom->x = atof(tok_get(fp, skip, FALSE));
-        p_atom->y = atof(tok_get(fp, FALSE, FALSE));
-        p_atom->z = atof(tok_get(fp, FALSE, FALSE));
+              p_atom->x = atof(tok_get(fp, skip, FALSE));
+              p_atom->y = atof(tok_get(fp, FALSE, FALSE));
+              p_atom->z = atof(tok_get(fp, FALSE, FALSE));
 
-        p_atom->mass = type_mass[itype];
+              p_atom->mass = type_mass[itype];
 
-        printf("%s %10.6f %10.6f %10.6f %s\n", p_atom->label,
-                                               p_atom->x,
-                                               p_atom->y,
-                                               p_atom->z,
-                                               p_atom->elem);
-        p_atom++;
+              printf("%s %10.6f %10.6f %10.6f %s\n", p_atom->label,
+                                                     p_atom->x,
+                                                     p_atom->y,
+                                                     p_atom->z,
+                                                     p_atom->elem);
+              p_atom++;
+           }
       }
   }
 /*****************************************************/
@@ -394,7 +404,7 @@ for ( itype=0; itype <= *p_num_types; itype++)
          printf("Mode frequency %10.6f\n", *p_this_eigenval);
 
          tok= tok_get( fp, skip, FALSE);
-         for (iatom = 0; iatom <= *p_num_atoms; iatom++)
+         for (iatom = 0; iatom < *p_num_atoms; iatom++)
            {
               tok_get( fp, skip, FALSE);
               for ( jloop = 0; jloop <= 1; jloop++ ) tok= tok_get( fp, noskip, FALSE);
@@ -488,32 +498,43 @@ printf("Energy = %f\n", *p_energy);*/
       p_key= "FREE";
       p_key2= "ENERGIE";
       sep = 0;
+      skip = TRUE;
 
       found=TRUE;
       while (found)
         {
-           printf("Looking for energy\n");
+           printf("Looking for energy....\n");
            find_line( fp, p_key, p_key2, sep, &found, -1 );
 
            if (found)
             {
-
               printf("EDIFF reached\n");
               /*** Skip lines to get to the energy ***/
               for ( jloop = 0; jloop <= 3; jloop++ ) tok= tok_get( fp, skip, FALSE);
               for ( jloop = 0; jloop <= 4; jloop++ ) tok= tok_get( fp, FALSE, FALSE);
-              *p_energy = atof( tok_get( fp, noskip, FALSE ));
 
+              if (just_count)
+                {
+                   printf("...waiting...1..\n");
+                   ++*p_num_energies;
+                   printf("Just counting, now have %d energies.\n", *p_num_energies);
+                }
+              else
+                {
+                   printf("...waiting...2..\n");
+                   *p_energy = atof( tok_get( fp, noskip, FALSE ));
+                   printf("Energy = %f\n", *p_energy);
+                   p_energy++;
+                }
             }
         }
               
-      printf("Energy = %f\n", *p_energy);
 
     }
 
 /*** Debug Jan 2012 introduced while loop to find final instance of E-fermi rather than first ***/
 /*** Dave Willock ***/
-
+  printf("Deciding on Fermi search.....\n");
   if (need_fermi)
     {
       p_key= "E-fermi";
@@ -521,9 +542,7 @@ printf("Energy = %f\n", *p_energy);*/
       sep = 0;
 
       found=FALSE;
-
-      found=TRUE;
-      while (found)
+      while (!found)
         {
            printf("Looking for Fermi energy\n");
            find_line( fp, p_key, p_key2, sep, &found, -1 );
@@ -538,7 +557,15 @@ printf("Energy = %f\n", *p_energy);*/
        }
 
     }
+  else
+    {
+       printf("Fermi energy read from OUTCAR not requested\n");
+    }
 
 
-  return 0;
+/*** For mallocing version need to go back to main for memory assignment before filling arrays ***/
+
+  printf("Returning from read_outcar.c\n");
+  if (just_count) return *p_num_atoms;
+   else return 0;
 }

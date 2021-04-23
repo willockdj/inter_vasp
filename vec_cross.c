@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-/* the dot product between two vectors */
+/* the cross product between two vectors */
 
 void vec_cross(double *p_A, double *p_B, double *p_cross)
 {

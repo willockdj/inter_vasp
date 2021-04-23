@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <math.h>
+#include "data.h"
 #include "maxima.h"
 #include "constants.h"
 #include "structures.h"
 
+void min_image( double *x, double *y, double *z, double *p_recip_latt_vec, double *p_latt_vec);
+
 void write_pdb(FILE *pdb_fp, atom *p_molecule, double *p_abc, int num_atoms,
-               int *p_super, double *p_latt_vec)
+               int *p_super, double *p_recip_latt_vec, double *p_latt_vec)
 {
 int iloop, iatom, ineigh, neigh_index;
 int ia, ib, ic, image;
@@ -51,11 +54,13 @@ for ( ia = 0; ia <= *p_super-1; ia++ )
             {
     printf("%10.6f %10.6f\n", p_atom->z , image_vec[2]);
 
-    fprintf(pdb_fp,"HETATM %4d  %2s        %4d  %7.3f %7.3f %7.3f\n",
+    fprintf(pdb_fp,"ATOM   %4d %2s  %4d %-2s%3d     %7.3f %7.3f %7.3f  1.00  0.00          %2s  \n",
+                                        iloop+1, p_atom->elem,
                                         iloop+1, p_atom->elem, iloop+1,
                                         p_atom->x + image_vec[0],
                                         p_atom->y + image_vec[1], 
-                                        p_atom->z + image_vec[2]);
+                                        p_atom->z + image_vec[2],
+                                        p_atom->elem);
 
               p_atom++;
             }
@@ -84,6 +89,8 @@ for ( ia = 0; ia <= *p_super-1; ia++ )
                    dx = p_atom->x - (p_molecule+neigh_index)->x;
                    dy = p_atom->y - (p_molecule+neigh_index)->y;
                    dz = p_atom->z - (p_molecule+neigh_index)->z;
+
+//                   min_image( &dx, &dy, &dz, p_recip_latt_vec, p_latt_vec);
 
                    dist = sqrt( dx*dx + dy*dy + dz * dz);
 

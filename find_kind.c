@@ -15,6 +15,8 @@ list second_namelist[] = {SECOND_DIRECTIVE_LIST};
 list third_namelist[] = {THIRD_DIRECTIVE_LIST}; 
 list siesta_namelist[] = {SIESTA_DIRECTIVE_LIST}; 
 list siesta_2nd_namelist[] = {SIESTA_2ND_DIRECTIVE_LIST}; 
+list onetep_namelist[] = {ONETEP_DIRECTIVE_LIST}; 
+list onetep_2nd_namelist[] = {ONETEP_2ND_DIRECTIVE_LIST}; 
 
 /*****************************************************************************/
 /*** find_kind altered to be context aware by knowing the level from *********/
@@ -97,6 +99,30 @@ else if (level == SIESTA_2ND_DIRECTIVES)
   while(siesta_2nd_namelist[j++].token_index != BLANK_DIRECT);
   }
 
+else if (level == ONETEP_DIRECTIVES)
+  {
+    do
+      {
+        len = strlen(onetep_namelist[j].directive);
+        if (!strncmp(token, onetep_namelist[j].directive,len))
+          {
+	     return(onetep_namelist[j].token_index);
+	  }
+      }
+  while(onetep_namelist[j++].token_index != BLANK_DIRECT);
+  }
+else if (level == ONETEP_2ND_DIRECTIVES)
+  {
+    do
+      {
+        len = strlen(onetep_2nd_namelist[j].directive);
+        if (!strncmp(token, onetep_2nd_namelist[j].directive,len))
+          {
+	     return(onetep_2nd_namelist[j].token_index);
+	  }
+      }
+  while(onetep_2nd_namelist[j++].token_index != BLANK_DIRECT);
+  }
 
     do
       {
@@ -109,4 +135,4 @@ else if (level == SIESTA_2ND_DIRECTIVES)
 
   return(BLANK_DIRECT);
 }
-  
+

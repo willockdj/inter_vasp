@@ -54,7 +54,7 @@ typedef struct
   int nb_list;                  /* index of non-bonding parameters */
   double vdw;			/* van der waals radius of the atom */
   int num_neigh; 		/* number of neighbours */
-  int neighb[15]; 		/*initialise -1=not bonded */
+  int neighb[MAX_NEIGHS]; 		/*initialise -1=not bonded */
   int num_images;               /* Number of symmetry related images added Nov 98 DJW */
   int image[10];                /* image indexes initially allow only 10 images */
   int mol;                      /* molecule index for this atom */
@@ -162,4 +162,118 @@ int group_type1;
 int group_type2;
 int num_grp1;
 int num_grp2;
+char cnt_lab1[7];
+char cnt_lab2[7];
+int centre[2];
+char axis1_lab[7];
+char axis2_lab[7];
+int axis1_ind[2];
+int axis2_ind[2];
 } group_lists;
+
+/**** structure for controlling permutation of atoms *****/
+
+typedef struct
+{
+char elem[10];
+char subs_elem[10];
+double mind;
+double maxd;
+int num;
+int check;
+int centre;
+int debug;
+} perms;
+
+typedef struct
+{
+char label_i[7];
+char label_j[7];
+int index_i;
+int index_j;
+unsigned long long int state;
+double r1;
+double r2;
+double r3;
+} seen_lists;
+
+/** Structures for holding sets of control variables ***/
+
+typedef struct
+{
+int out;
+int incar;
+int grp;
+int mol;
+int miller;
+int report;
+int band;
+int tot;
+int labels;
+int transfer;
+int perm_centre;
+int perm_subs_elem;
+int potcar;
+} have_list;
+
+typedef struct
+{
+int gulp;
+int car;
+int cif;
+int pdb;
+int vasp;
+int siesta;
+int onetep;
+int punch;
+int cart;
+int fract;
+int end_cart;
+int end_fract;
+int centre;
+int end_gulp;
+int end_car;
+int end_vasp;
+int siesta_dos;
+int vasp_dos;
+int restricted;
+} is_list;
+
+typedef struct
+{
+int car;
+int poscar;
+int onetep;
+int cif;
+int arc;
+int freq;
+int force;
+int energy;
+int fermi;
+int pdb;
+int gulp;
+int shells;
+int expansion;
+int morph;
+int angle;
+int late;
+int shift;
+int dos;
+int part_dos;
+int mdtraj;
+int multi_dos;
+int md_run;
+int monit;
+int zsort;
+int oshift;
+int vgap;  
+int miller_sort;
+int permute;
+int interpolate;
+int react_coord;
+int poscar_frac;
+int potcar;
+int hbond;
+int match;
+} need_list;
+

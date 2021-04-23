@@ -27,16 +27,18 @@ void find_line(FILE *fp, char *p_key, char *p_key2, int sep, int *p_found, int m
 
 /* read in a doscar file from VASP */
 
-int read_doscar( FILE *fp, dos *p_ndos, int need_pdos, int *p_part_dos_list, 
-                 int num_atoms_pdos, dos *p_pdos, int *p_spd, int num_columns )
+void read_doscar( FILE *fp, dos *p_ndos, int need_pdos, int *p_part_dos_list, 
+                  int num_atoms_pdos, dos *p_pdos, int *p_spd, int num_ndos_columns,
+                  int num_pdos_columns, int num_dos )
 {
-  int iloop, jloop, iatom, iorb;
+  int i, iloop, jloop, iatom, iorb;
   int found, sep;
   int skip=TRUE;
   int noskip=FALSE;
+  int started_pop;
   int num_to_skip;
   int error, good_read;
-  int num_dos, this_num_dos;
+  int this_num_dos;
   int pdos_atom;
 
   dos *p_this_pdos;
@@ -49,23 +51,12 @@ int read_doscar( FILE *fp, dos *p_ndos, int need_pdos, int *p_part_dos_list,
   char *tok, *tok2, *p_letter;
 
   printf("Entered read_dos\n");
-  p_key= "none";
-  p_key2= "system";
-  sep = 0;
-  num_dos = -1;
 
-  tok= tok_get( fp, skip, FALSE);
+// Position for the info line
 
-  find_line( fp, p_key, p_key2, sep, &found, -1 );
+  for (iloop=0; iloop < 6; iloop++)
+                   tok= tok_get( fp, skip, FALSE);
 
-  if (found)
-    {
-       if (strcmp(p_key,"none") != 0 )
-          printf("Found >>%s<< in DOSCAR file\n", p_key);
-       else
-          printf("Found >>%s<< in DOSCAR file\n", p_key2);
-
-       tok= tok_get( fp, skip, FALSE);
        e_max = atof(tok);
        printf("got e_max as %10.6f\n", e_max);
 
@@ -74,26 +65,27 @@ int read_doscar( FILE *fp, dos *p_ndos, int need_pdos, int *p_part_dos_list,
        printf("got e_min as %10.6f\n", e_min);
    
        tok= tok_get( fp, noskip, FALSE);
-       num_dos = atoi(tok);
-       printf("got num_dos as %d\n", num_dos);
+       this_num_dos = atoi(tok);
+       printf("got this_num_dos as %d\n", this_num_dos);
 
-       if (num_dos > MAX_DOS)
-          {
-             printf("ERROR : Number of points in DOSCAR file (%d) exceeds MAX_DOS (%d).\n",
-                          num_dos, MAX_DOS);
+       if ( this_num_dos != num_dos ) 
+         {
+            printf("ERROR : Number of points in DOSCAR file (%d) according to read_doscar\n", this_num_dos);
+            printf("ERROR : does not agree with that from count_doscar (%d).\n", num_dos);
              exit(0);
-          }
+         }
 
        printf("File e_min = %10.6f, e_max = %10.6f, num_dos = %d\n",
                         e_min, e_max, num_dos);
-       printf("Number of columns = %d\n", num_columns);
+       printf("Number of ndos_columns = %d\n", num_ndos_columns);
+       printf("Number of pdos_columns = %d\n", num_pdos_columns);
 
        if (num_dos > 0)
          {
             for(iloop=0; iloop < num_dos; iloop++)
               {
-/*** If spin restricted ... ***/
-                 if (num_columns == 2 || num_columns == 5 || num_columns == 11)
+/*** If spin restricted ... note that num_ndos_columns does not include the energy column ***/
+                 if (num_ndos_columns == 2 ) 
                    {
                      p_ndos->energy = atof(tok_get( fp, skip, FALSE));
 
@@ -105,8 +97,8 @@ int read_doscar( FILE *fp, dos *p_ndos, int need_pdos, int *p_part_dos_list,
                                                   p_ndos->up_dos,
                                                   p_ndos->up_totdos); 
                    }
-/*** If spin unrestricted ... ***/
-                 else if (num_columns == 4 || num_columns == 10 || num_columns == 22)
+/*** If spin unrestricted ... note that num_ndos_columns does not include the energy column ***/
+                 else if (num_ndos_columns == 4 )
                    {
                      p_ndos->energy = atof(tok_get( fp, skip, FALSE));
 
@@ -122,25 +114,19 @@ int read_doscar( FILE *fp, dos *p_ndos, int need_pdos, int *p_part_dos_list,
                                                   p_ndos->up_totdos,
                                                   p_ndos->down_totdos);
                    }
-                        
+                 else
+                   {
+                      printf("ERROR: Unrecognised number of ndos columns in DOSCAR file: num_ndos_columns = %d\n", num_ndos_columns);
+                      printf("ERROR: Check pdos section of the DOSCAR file.\n");
+                      exit(0);
+                   }
                  p_ndos++;
               }
-         }
-       else
-         {
-           printf("ERROR: Bad num_dos read in DOSCAR file\n");
-           exit(0);
-         }
-    }
-  else
-    {
-       printf("Keyword >>%s<< not found when reading DOSCAR file\n", p_key);
-       exit(0);
-    }
+          }
 
   if ( need_pdos )
     {
-      printf("Building pdos\n");
+      printf("Building pdos for %d atoms\n", num_atoms_pdos);
 
       iatom=1;
       pdos_atom=0;
@@ -184,161 +170,340 @@ int read_doscar( FILE *fp, dos *p_ndos, int need_pdos, int *p_part_dos_list,
              }
 
 /**** See if we need this atoms data ****/
-          printf("iatom = %d\n", iatom);
+
+          started_pop=FALSE;
           if (iatom == *(p_part_dos_list+pdos_atom))
             {
-              printf("Reading this pdos contribution\n");
+              printf("Reading this pdos contribution for atom %d, index %d num_dos= %d\n", 
+                                                                          iatom, pdos_atom, num_dos);
               p_this_pdos = p_pdos;
                        
-                   printf("Entered first atom in PDOS list\n");
-                   for(iloop=0; iloop < num_dos; iloop++) 
+              for (iloop=0; iloop < num_dos; iloop++) 
+                 {
+                   tok=tok_get( fp, skip, FALSE); 
+
+                   if (pdos_atom == 0)
                      {
-
-                       tok=tok_get( fp, skip, FALSE); 
-
-                       if (pdos_atom == 0)
+/**** First acceptable contribution to pdos, record the energy column ****/
+                       p_this_pdos->energy = atof(tok);
+                     }
+/**** Second or higher acceptable contribution to pdos test there are no changes ****/
+                   else
+                     {
+                        if (fabs(atof(tok)-p_this_pdos->energy) > 0.0001)
                          {
-/**** First acceptable contribution to pdos ****/
-                          p_this_pdos->energy = atof(tok);
-/**** Second or higher acceptable contribution to pdos ****/
+                            printf("ERROR: Energy scale changed during PDOS read\n");
+                            printf("ERROR: Read %10.6f reference is %10.6f\n", atof(tok),
+                                        p_this_pdos->energy);
+                            exit(0);
                          }
-                       else
+                     }
+
+                   if (iloop == 0) 
+                     {
+                        printf("Gathering data for pdos,from %d columns.\n", num_pdos_columns);
+                        if ( *p_spd )     printf("spd[0] set T\n"); else printf("spd[0] set F\n");
+                        if ( *(p_spd+1) ) printf("spd[1] set T\n"); else printf("spd[1] set F\n");
+                        if ( *(p_spd+2) ) printf("spd[2] set T\n"); else printf("spd[2] set F\n");
+                        if ( *(p_spd+3) ) printf("spd[3] set T\n"); else printf("spd[3] set F\n");
+                     }
+
+/**** read the population data for pdos lines ****/
+                   while ( (tok = tok_get( fp, noskip, FALSE)) )
+                     {
+/**** s orbital only restricted ****/
+                       if (num_pdos_columns == 1)
                          {
-                            if (fabs(atof(tok)-p_this_pdos->energy) > 0.0001)
-                             {
-                                printf("ERROR: Energy scale changed during PDOS read\n");
-                                printf("ERROR: Read %10.6f reference is %10.6f\n", atof(tok),
-                                            p_this_pdos->energy);
-                                exit(0);
-                             }
-                         }
-
-                       if (pdos_atom == 0) p_this_pdos->up_dos =0.0;
-                       iorb = 0;
-
-                       while ( (tok = tok_get( fp, noskip, FALSE)) )
+                           if (*p_spd) p_this_pdos->up_dos = atof(tok);
+                         } 
+/**** s, px, py, pz orbitals restricted ****/
+                       else if (num_pdos_columns == 4)
                          {
-/**** s, p, d orbitals ****/
-                           if (num_columns == 5)
-                             {
-                               if (*(p_spd+iorb)) p_this_pdos->up_dos += atof(tok);
-                               iorb++;
-                             } 
-/**** s, px, py, pz, dxy, dyz, dxz, dx2-y2, dz2 orbitals ****/
-                           else if (num_columns == 11)
-                             {
+                           p_this_pdos->up_dos = 0.0;
+                           if (*p_spd) p_this_pdos->up_dos += atof(tok);
 
-                               if (iorb == 0)
-                                 {
-                                   pop = atof(tok);
-                                 }
-                               else if (iorb == 1)
-                                 {
-                                   pop = atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok); 
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok);
-                                 }
-                               else if (iorb == 2)
-                                 {
-                                   pop = atof(tok); 
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok); 
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok); 
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok); 
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok);
-                                 }
-                               else if (iorb > 2)
-                                 {
-                                    printf("ERROR: Too many orbitals in PDOS entries of DOSCAR file.\n");
-                                    printf("ERROR: Only expecting spd level but iorb = %d.\n", iorb);
-                                    exit(0);
-                                 }
-                               if (*(p_spd+iorb)) p_this_pdos->up_dos += pop;
-                               iorb++;   
-                             }
-/**** s, p, d orbitals, spin unrestricted ****/
-                           else if (num_columns == 10) 
+                           if (*(p_spd+1)) 
                              {
-                               if (*(p_spd+iorb)) 
-                                 {
-                                   p_this_pdos->up_dos += atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   p_this_pdos->down_dos += atof(tok);
-                                 }
-                               iorb++;
-                             }
-/**** s, px, py, pz, dxy, dyz, dxz, dx2-y2, dz2 orbitals, spin unrestricted ****/
-                           else if (num_columns == 22)
-                             {
-                               if (iorb == 0)
-                                 {
-                                   pop = atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop2 = atof(tok);
-                                 }
-                               else if (iorb == 1)
-                                 {
-                                   pop = atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop2 = atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop2 += atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop2 += atof(tok);
-                                 }
-                               else if (iorb == 2)
-                                 {
-                                   pop = atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop2 = atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop2 += atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop2 += atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop2 += atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop += atof(tok);
-                                   tok = tok_get( fp, noskip, FALSE);
-                                   pop2 += atof(tok);
-                                 }
-                               else if (iorb > 2)
-                                 {
-                                    printf("ERROR: Too many orbitals in PDOS entries of DOSCAR file.\n");
-                                    printf("ERROR: Only expecting spd level but iorb = %d.\n", iorb);
-                                    exit(0);
-                                 }
-
-                               if (*(p_spd+iorb)) 
-                                 {
-                                   p_this_pdos->up_dos += pop;
-                                   p_this_pdos->down_dos += pop2;
-                                 }
-                               iorb++;
+                               for (iorb=0; iorb < 3; iorb++)
+                                  {
+                                    tok = tok_get( fp, noskip, FALSE);
+                                    p_this_pdos->up_dos += atof(tok);
+                                  }
                              }
                            else
                              {
-                               printf("ERROR: Unrecognised number of columns in pdos section of DOSCAR file\n");
-                               exit(0);
-                             }    
+                               for (iorb=0; iorb < 3; iorb++)
+                                    tok = tok_get( fp, noskip, FALSE);
+                             }
+                         }
+/**** s, px, py, pz, dxy, dyz, dxz, dx2-y2, dz2 orbitals restricted ****/
+                       else if (num_pdos_columns == 9)
+                         {
+                           p_this_pdos->up_dos = 0.0;
+                           if (*p_spd) p_this_pdos->up_dos += atof(tok);
+
+                           if (*(p_spd+1)) 
+                             {
+                               for (iorb=0; iorb < 3; iorb++)
+                                  {
+                                    tok = tok_get( fp, noskip, FALSE);
+                                    p_this_pdos->up_dos += atof(tok);
+                                  }
+                             }
+                           else
+                             {
+                               for (iorb=0; iorb < 3; iorb++)
+                                           tok = tok_get( fp, noskip, FALSE);
+                             }
+
+
+                           if (*(p_spd+2)) 
+                             {
+                               for (iorb=0; iorb < 5; iorb++)
+                                  {
+                                    tok = tok_get( fp, noskip, FALSE);
+                                    p_this_pdos->up_dos += atof(tok);
+                                  }
+                             }
+                           else
+                             {
+                               for (iorb=0; iorb < 5; iorb++)
+                                    tok = tok_get( fp, noskip, FALSE);
+                             }
+                          }
+/**** s, px, py, pz, dxy, dyz, dxz, dx2-y2, dz2 and f-set orbitals restricted ****/
+                       else if (num_pdos_columns == 16)
+                         {
+                           p_this_pdos->up_dos = 0.0;
+                           if (*p_spd) p_this_pdos->up_dos += atof(tok);
+
+                           if (*(p_spd+1)) 
+                             {
+                               for (iorb=0; iorb < 3; iorb++)
+                                  {
+                                    tok = tok_get( fp, noskip, FALSE);
+                                    p_this_pdos->up_dos += atof(tok);
+                                  }
+                             }
+                           else
+                             {
+                               for (iorb=0; iorb < 3; iorb++)
+                                           tok = tok_get( fp, noskip, FALSE);
+                             }
+
+
+                               if (*(p_spd+2)) 
+                                 {
+                                   for (iorb=0; iorb < 5; iorb++)
+                                      {
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->up_dos += atof(tok);
+                                      }
+                                 }
+                               else
+                                 {
+                                   for (iorb=0; iorb < 5; iorb++)
+                                               tok = tok_get( fp, noskip, FALSE);
+                                 }
+
+
+                               if (*(p_spd+3)) 
+                                 {
+                                   for (iorb=0; iorb < 7; iorb++)
+                                      {
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->up_dos += atof(tok);
+                                      }
+                                 }
+                               else
+                                 {
+                                   for (iorb=0; iorb < 7; iorb++)
+                                               tok = tok_get( fp, noskip, FALSE);
+                                 }
+                             }
+/**** s orbital only unrestricted ****/
+                           else if (num_pdos_columns == 2)
+                             {
+                               if (*p_spd) 
+                                 {
+                                    p_this_pdos->up_dos = atof(tok);
+                                    tok = tok_get( fp, noskip, FALSE);
+                                    p_this_pdos->down_dos = atof(tok);
+                                 }
+                             } 
+/**** s, px, py, pz orbitals unrestricted ****/
+                           else if (num_pdos_columns == 8)
+                             {
+                               p_this_pdos->up_dos   = 0.0;
+                               p_this_pdos->down_dos = 0.0;
+
+                               if (*p_spd) 
+                                 {
+                                    p_this_pdos->up_dos = atof(tok);
+                                    tok = tok_get( fp, noskip, FALSE);
+                                    p_this_pdos->down_dos = atof(tok);
+                                 }
+
+                               if (*(p_spd+1)) 
+                                 {
+                                   for (iorb=0; iorb < 3; iorb++)
+                                      {
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->up_dos += atof(tok);
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->down_dos += atof(tok);
+                                      }
+                                 }
+                               else
+                                 {
+                                   for (iorb=0; iorb < 6; iorb++)
+                                               tok = tok_get( fp, noskip, FALSE);
+                                 }
+                             }
+/**** s, px, py, pz, dxy, dyz, dxz, dx2-y2, dz2 orbitals unrestricted ****/
+                           else if (num_pdos_columns == 18)
+                             {
+                               if (iloop == 0) printf("reading from 18 columns\n");
+                               p_this_pdos->up_dos = 0.0;
+                               p_this_pdos->down_dos = 0.0;
+
+                               if (*p_spd) 
+                                 {
+                                    p_this_pdos->up_dos = atof(tok);
+                                    tok = tok_get( fp, noskip, FALSE);
+                                    p_this_pdos->down_dos = atof(tok);
+
+                                    if ( iloop == 0 ) 
+                                       {
+                                 printf("Including s-orbital contributions of %10.6f (up) %10.6f (down)\n", 
+                                          p_this_pdos->up_dos ,p_this_pdos->down_dos );
+                                       }
+                                 }
+                               else
+                                 {
+                                    tok = tok_get( fp, noskip, FALSE);
+                                 }
+
+                               if (*(p_spd+1)) 
+                                 {
+                                   for (iorb=0; iorb < 3; iorb++)
+                                      {
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->up_dos += atof(tok);
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->down_dos += atof(tok);
+                                      }
+                                    if ( iloop == 0 ) 
+                                       {
+                                 printf("Including p-orbital contributions total now %10.6f (up) %10.6f (down)\n", 
+                                          p_this_pdos->up_dos ,p_this_pdos->down_dos );
+                                       }
+                                 }
+                               else
+                                 {
+                                   for (iorb=0; iorb < 6; iorb++)
+                                               tok = tok_get( fp, noskip, FALSE);
+                                 }
+
+
+                               if (*(p_spd+2)) 
+                                 {
+                                   for (iorb=0; iorb < 5; iorb++)
+                                      {
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->up_dos += atof(tok);
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->down_dos += atof(tok);
+                                      }
+                                    if ( iloop == 0 ) 
+                                       {
+                                 printf("Including d-orbital contributions total now %10.6f (up) %10.6f (down)\n", 
+                                          p_this_pdos->up_dos ,p_this_pdos->down_dos );
+                                       }
+                                 }
+                               else
+                                 {
+                                   for (iorb=0; iorb < 10; iorb++)
+                                               tok = tok_get( fp, noskip, FALSE);
+                                 }
+                              }
+/**** s, px, py, pz, dxy, dyz, dxz, dx2-y2, dz2 and f-set orbitals unrestricted ****/
+                           else if (num_pdos_columns == 32)
+                             {
+                               p_this_pdos->up_dos = 0.0;
+                               p_this_pdos->down_dos = 0.0;
+
+                               if (*p_spd) 
+                                 {
+                                    p_this_pdos->up_dos = atof(tok);
+                                    tok = tok_get( fp, noskip, FALSE);
+                                    p_this_pdos->down_dos = atof(tok);
+                                 }
+                               else
+                                 {
+                                    tok = tok_get( fp, noskip, FALSE);
+                                 }
+
+                               if (*(p_spd+1)) 
+                                 {
+                                   for (iorb=0; iorb < 3; iorb++)
+                                      {
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->up_dos += atof(tok);
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->down_dos += atof(tok);
+                                      }
+                                 }
+                               else
+                                 {
+                                   for (iorb=0; iorb < 6; iorb++)
+                                               tok = tok_get( fp, noskip, FALSE);
+                                 }
+
+
+                               if (*(p_spd+2)) 
+                                 {
+                                   for (iorb=0; iorb < 5; iorb++)
+                                      {
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->up_dos += atof(tok);
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->down_dos += atof(tok);
+                                      }
+                                 }
+                               else
+                                 {
+                                   for (iorb=0; iorb < 10; iorb++)
+                                               tok = tok_get( fp, noskip, FALSE);
+                                 }
+
+
+                               if (*(p_spd+3)) 
+                                 {
+                                   for (iorb=0; iorb < 7; iorb++)
+                                      {
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->up_dos += atof(tok);
+                                        tok = tok_get( fp, noskip, FALSE);
+                                        p_this_pdos->down_dos += atof(tok);
+                                      }
+                                 }
+                               else
+                                 {
+                                   for (iorb=0; iorb < 14; iorb++)
+                                        tok = tok_get( fp, noskip, FALSE);
+                                 }
+                             }
+                          else 
+                             {
+                                printf("ERROR: Unexpected number of columns in pdos of DOSCAR file.\n");
+                                printf("ERROR: Counted: %d columns?\n", num_pdos_columns);
+                                exit(0);
+                             }
                            }
+//                           printf("Exit for DEBUG \n");
+//                           exit(0);
                            p_this_pdos++;
-                             
                     }
               pdos_atom++;
             }
@@ -354,5 +519,5 @@ int read_doscar( FILE *fp, dos *p_ndos, int need_pdos, int *p_part_dos_list,
          }
     }
 
-  return num_dos;
+  return;
 }

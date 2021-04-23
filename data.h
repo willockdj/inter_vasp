@@ -89,14 +89,14 @@ typedef struct
 
 #ifdef MAIN
 
-EXTERNAL int num_bond_list = 19;
+EXTERNAL int num_bond_list = 24;
 EXTERNAL bond_dist bond_table[] = {
 {"C", "C", 1.51},
 {"C", "N", 1.46},
 {"N", "N", 1.46},
 {"N", "H", 1.01},
 {"C","H", 1.1},
-{"O","H", 1.6},
+{"O","H", 1.2},
 {"N", "D", 1.01},
 {"C","D", 1.1},
 {"O","D", 1.0},
@@ -109,7 +109,12 @@ EXTERNAL bond_dist bond_table[] = {
 {"N","O",1.60},
 {"Cu","O",1.80},
 {"Fe","O",1.80},
-{"Pt","H",2.00}
+{"Pt","H",2.00},
+{"Cu","Cl",2.50},
+{"Cu","O",2.50},
+{"Ce","O",2.50},
+{"Cu","C",2.50},
+{"Pt","Pt",2.80}
 };
 
 EXTERNAL int num_fractions = 5;

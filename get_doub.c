@@ -2,7 +2,7 @@
 #include <math.h>
 #include <limits.h>
 #include "global_values.h"
-int get_int( int *p_ichar, int *point_j,
+long int get_long_int( int *p_ichar, int *point_j,
                                int *itsanum, int *ndigi,int i, int *sign);
 
 /* routine to pick out signed double from garbage */
@@ -10,9 +10,12 @@ int get_int( int *p_ichar, int *point_j,
 double get_doub( int *p_ichar, int num_of_chars, int *p_place, int *p_itsanum )
 {
 
-int idave,sign,num_mmbrs;
-int itsanum,iafter_dec,ndigi,iloop,istart,sign_predec;
+long int idave;
+long int iafter_dec,sign_predec;
+int itsanum,ndigi,iloop,istart, sign;
 double fdave,fafter_dec;
+
+printf("In get_doub num_of_chars %d, place %d and itsanum %d\n", num_of_chars, *p_place, *p_itsanum);
 
 *p_itsanum=0;
 
@@ -20,9 +23,10 @@ double fdave,fafter_dec;
 
 while ( *p_place <= num_of_chars && !*p_itsanum )
     {
-         idave= get_int( p_ichar, p_place, p_itsanum, &ndigi, num_of_chars, 
+         idave= get_long_int( p_ichar, p_place, p_itsanum, &ndigi, num_of_chars, 
                                                                     &sign);
 
+         printf("get_doub read int %ld with sign %d\n", idave, sign);
 /* if next is not a '.' we have an integer or a pure decimal with
    no leading zero eg. .5670  */
 
@@ -31,7 +35,7 @@ while ( *p_place <= num_of_chars && !*p_itsanum )
           istart= *p_place -ndigi;
           if (*(p_ichar+istart-1) == '.')
 	    {
-             fafter_dec= fabs(idave);
+             fafter_dec= labs(idave);
              for (iloop=0; iloop < ndigi; ++iloop) fafter_dec= 0.1*fafter_dec;
              fdave= fafter_dec;
             }
@@ -43,13 +47,16 @@ while ( *p_place <= num_of_chars && !*p_itsanum )
          {
          sign_predec= sign;
         
-         iafter_dec = get_int(p_ichar , p_place, p_itsanum, &ndigi, 
+         iafter_dec = get_long_int(p_ichar, p_place, p_itsanum, &ndigi, 
                                                   num_of_chars, &sign);
 
-         fafter_dec= fabs(iafter_dec);
+         printf("get_doub read int after decimal %ld with %d digits\n", iafter_dec, ndigi);
+         fafter_dec= labs(iafter_dec);
+         printf("Converts to %10.6f\n",fafter_dec);
 
          for (iloop=0; iloop < ndigi; ++iloop) fafter_dec= 0.1*fafter_dec;
-         fdave= sign_predec * (fabs(idave)+fafter_dec);
+         printf("after scaling %10.6f\n",fafter_dec);
+         fdave= sign_predec * (labs(idave)+fafter_dec);
          }
 
     }

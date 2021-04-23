@@ -10,7 +10,7 @@
 void write_doscsv(FILE *fp, char *p_title_x, char *p_title_y, 
                   char *p_title_z,
                   dos *p_dos,
-                  int have_tot, int num, int num_columns, double fermi)
+                  int have_tot, int num, int is_restricted, double fermi)
   {
 int i;
 
@@ -22,7 +22,7 @@ fprintf(fp,"Fermi Energy (eV), %f\n",fermi);
 
 fprintf(fp,"\n");
 
-if (num_columns == 2 || num_columns == 5 || num_columns == 11 ||num_columns == 18)
+if (is_restricted)
   {
     fprintf(fp,"%s corrected by Fermi Energy, %s",p_title_x,p_title_y); 
 
@@ -31,7 +31,7 @@ if (num_columns == 2 || num_columns == 5 || num_columns == 11 ||num_columns == 1
 
     fprintf(fp,"\n"); 
   }
-else if (num_columns == 4 || num_columns == 10 || num_columns == 22||num_columns==36)
+else 
   {
     fprintf(fp,"%s corrected by Fermi Energy, up_%s, down_%s",p_title_x,p_title_y,p_title_y);
 
@@ -66,7 +66,7 @@ for (i=0; i<=num; i++)
         fprintf(fp,"%f", val); 
       }
     
-    if (num_columns == 4 || num_columns == 10 || num_columns == 22||num_columns==36)
+    if (!is_restricted)
       {
         fprintf(fp,",");
         val= -p_dos->down_dos;
@@ -94,7 +94,7 @@ for (i=0; i<=num; i++)
             fprintf(fp,"%f", val); 
           }
 
-        if (num_columns == 4 || num_columns == 10 || num_columns == 22||num_columns == 36)
+        if (!is_restricted)
           {  
             fprintf(fp,",");
             val= -p_dos->down_totdos;

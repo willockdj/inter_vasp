@@ -31,7 +31,7 @@
 
       char *tok, *tok2;
 
-      printf("In find_line looking for %s and %s %d apart\n", p_key, p_key2, sep);
+//      printf("In find_line looking for %s and %s %d apart\n", p_key, p_key2, sep);
       done = FALSE;
 
 /****************************************************/
@@ -69,7 +69,6 @@
 /****************************************************/
      if (strcmp(p_key, "none") != 0 && strcmp(p_key2, "none") != 0)   
        {
-          printf("Testing first line >>%s<< >>%s<<\n", tok, tok2);
           if (tok && strcmp(p_key, tok) == 0 && tok2 && strcmp(p_key2, tok2) == 0) done=TRUE;
        }
 /****************************************************/
@@ -126,8 +125,8 @@
                             for (iloop=0; iloop <= sep; iloop++) tok2= tok_get( fp, noskip, FALSE);
 
                  done = done || strcmp(p_key2, tok2) == 0;      
-                 printf("Read >>%s<< and >>%s<<\n", tok, tok2);
-                 if ( done ) printf("Happy with that!\n");
+//                 printf("Read >>%s<< and >>%s<<\n", tok, tok2);
+//                 if ( done ) printf("Happy with that!\n");
               }
             else if ( tok2 && strcmp(p_key,"none") == 0) 
               {
@@ -136,10 +135,10 @@
                             for (iloop=0; iloop <= sep; iloop++) if (tok2) tok2= tok_get( fp, noskip, FALSE);
 
                  done = done || (tok2 && strcmp(p_key2, tok2) == 0);      
-                 if (tok2) printf("Read >>%s<<\n", tok2);
+//                 if (tok2) printf("Read >>%s<<\n", tok2);
                  if ( done ) 
                    {
-                      printf("Happy with that!\n");
+//                      printf("Happy with that!\n");
                       *p_found = TRUE;
                       return;
                    }
